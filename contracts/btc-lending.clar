@@ -219,3 +219,14 @@
         (ok true)
     )
 )
+
+(define-public (update-price-feed (asset (string-ascii 10)) (new-price uint))
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        (map-set collateral-prices
+            {asset: asset}
+            {price: new-price}
+        )
+        (ok true)
+    )
+)
