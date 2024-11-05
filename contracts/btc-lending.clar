@@ -40,3 +40,8 @@
     { user: principal }
     { active-loans: (list 10 uint) }
 )
+
+(define-map collateral-prices
+    { asset: (string-ascii 10) }
+    { price: uint }
+)
