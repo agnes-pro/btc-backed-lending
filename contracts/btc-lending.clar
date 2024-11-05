@@ -235,3 +235,7 @@
 (define-read-only (get-loan-details (loan-id uint))
     (map-get? loans {loan-id: loan-id})
 )
+
+(define-read-only (get-user-loans (user principal))
+    (map-get? user-loans {user: user})
+)
