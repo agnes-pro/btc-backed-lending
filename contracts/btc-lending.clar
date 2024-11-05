@@ -210,3 +210,12 @@
         (ok true)
     )
 )
+
+(define-public (update-liquidation-threshold (new-threshold uint))
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        (asserts! (>= new-threshold u110) ERR-INVALID-AMOUNT)
+        (var-set liquidation-threshold new-threshold)
+        (ok true)
+    )
+)
