@@ -109,3 +109,13 @@
         (ok true)
     )
 )
+
+
+(define-public (deposit-collateral (amount uint))
+    (begin
+        (asserts! (var-get platform-initialized) ERR-NOT-INITIALIZED)
+        (asserts! (> amount u0) ERR-INVALID-AMOUNT)
+        (var-set total-btc-locked (+ (var-get total-btc-locked) amount))
+        (ok true)
+    )
+)
