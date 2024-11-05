@@ -230,3 +230,8 @@
         (ok true)
     )
 )
+
+;; Read-Only Functions
+(define-read-only (get-loan-details (loan-id uint))
+    (map-get? loans {loan-id: loan-id})
+)
