@@ -14,6 +14,12 @@
 (define-constant ERR-LOAN-NOT-FOUND (err u107))
 (define-constant ERR-LOAN-NOT-ACTIVE (err u108))
 
+;; Additional constants for validation
+(define-constant ERR-INVALID-LOAN-ID (err u109))
+(define-constant ERR-INVALID-PRICE (err u110))
+(define-constant ERR-INVALID-ASSET (err u111))
+(define-constant VALID-ASSETS (list "BTC" "STX"))
+
 ;; Data Variables
 (define-data-var platform-initialized bool false)
 (define-data-var minimum-collateral-ratio uint u150) ;; 150% collateral ratio
@@ -98,6 +104,27 @@
     )
 )
 
+;; Helper function to validate loan-id
+(define-private (validate-loan-id (loan-id uint))
+    (and 
+        (> loan-id u0)
+        (<= loan-id (var-get total-loans-issued))
+    )
+)
+
+;; Helper function to validate asset string
+(define-private (is-valid-asset (asset (string-ascii 10)))
+    (is-some (index-of VALID-ASSETS asset))
+)
+
+;; Helper function to validate price
+(define-private (is-valid-price (price uint))
+    (and 
+        (> price u0)
+        (<= price u1000000000000) ;; Reasonable upper limit for price
+    )
+)
+
 ;; Public Functions
 (define-public (initialize-platform)
     (begin
@@ -160,37 +187,45 @@
 )
 
 (define-public (repay-loan (loan-id uint) (amount uint))
-    (let
-        (
-            (loan (unwrap! (map-get? loans {loan-id: loan-id}) ERR-LOAN-NOT-FOUND))
-            (interest-owed (calculate-interest 
-                (get loan-amount loan)
-                (get interest-rate loan)
-                (- block-height (get last-interest-calc loan))
-            ))
-            (total-owed (+ (get loan-amount loan) interest-owed))
-        )
-        (begin
-            (asserts! (is-eq (get status loan) "active") ERR-LOAN-NOT-ACTIVE)
-            (asserts! (is-eq (get borrower loan) tx-sender) ERR-NOT-AUTHORIZED)
-            (asserts! (>= amount total-owed) ERR-INVALID-AMOUNT)
-            
-            (map-set loans
-                {loan-id: loan-id}
-                (merge loan {
-                    status: "repaid",
-                    last-interest-calc: block-height
-                })
-            )
-            
-            (var-set total-btc-locked (- (var-get total-btc-locked) (get collateral-amount loan)))
-            
-            (match (map-get? user-loans {user: tx-sender})
-                existing-loans (ok (map-set user-loans
-                    {user: tx-sender}
-                    {active-loans: (filter not-equal-loan-id (get active-loans existing-loans))}
+    (begin
+        ;; Validate loan-id first
+        (asserts! (validate-loan-id loan-id) ERR-INVALID-LOAN-ID)
+        
+        (let
+            (
+                (loan (unwrap! (map-get? loans {loan-id: loan-id}) ERR-LOAN-NOT-FOUND))
+                (interest-owed (calculate-interest 
+                    (get loan-amount loan)
+                    (get interest-rate loan)
+                    (- block-height (get last-interest-calc loan))
                 ))
-                (ok false)
+                (total-owed (+ (get loan-amount loan) interest-owed))
+            )
+            (begin
+                (asserts! (is-eq (get status loan) "active") ERR-LOAN-NOT-ACTIVE)
+                (asserts! (is-eq (get borrower loan) tx-sender) ERR-NOT-AUTHORIZED)
+                (asserts! (>= amount total-owed) ERR-INVALID-AMOUNT)
+                
+                ;; Update loan status
+                (map-set loans
+                    {loan-id: loan-id}
+                    (merge loan {
+                        status: "repaid",
+                        last-interest-calc: block-height
+                    })
+                )
+                
+                ;; Return collateral to borrower
+                (var-set total-btc-locked (- (var-get total-btc-locked) (get collateral-amount loan)))
+                
+                ;; Remove from active loans
+                (match (map-get? user-loans {user: tx-sender})
+                    existing-loans (ok (map-set user-loans
+                        {user: tx-sender}
+                        {active-loans: (filter not-equal-loan-id (get active-loans existing-loans))}
+                    ))
+                    (ok false)
+                )
             )
         )
     )
@@ -218,11 +253,15 @@
 (define-public (update-price-feed (asset (string-ascii 10)) (new-price uint))
     (begin
         (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
-        (map-set collateral-prices
+        ;; Validate asset and price
+        (asserts! (is-valid-asset asset) ERR-INVALID-ASSET)
+        (asserts! (is-valid-price new-price) ERR-INVALID-PRICE)
+        
+        ;; Only proceed if validations pass
+        (ok (map-set collateral-prices
             {asset: asset}
             {price: new-price}
-        )
-        (ok true)
+        ))
     )
 )
 
@@ -242,6 +281,11 @@
         minimum-collateral-ratio: (var-get minimum-collateral-ratio),
         liquidation-threshold: (var-get liquidation-threshold)
     }
+)
+
+;; Add new read-only function to get valid assets
+(define-read-only (get-valid-assets)
+    VALID-ASSETS
 )
 
 ;; Helper function to filter out the repaid loan
