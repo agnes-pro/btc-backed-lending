@@ -35,3 +35,8 @@
         status: (string-ascii 20)
     }
 )
+
+(define-map user-loans
+    { user: principal }
+    { active-loans: (list 10 uint) }
+)
