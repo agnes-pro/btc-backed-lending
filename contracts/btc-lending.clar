@@ -119,3 +119,46 @@
         (ok true)
     )
 )
+
+
+(define-public (request-loan (collateral uint) (loan-amount uint))
+    (let
+        (
+            (btc-price (unwrap! (get price (map-get? collateral-prices {asset: "BTC"})) ERR-NOT-INITIALIZED))
+            (collateral-value (* collateral btc-price))
+            (required-collateral (* loan-amount (var-get minimum-collateral-ratio)))
+            (loan-id (+ (var-get total-loans-issued) u1))
+        )
+        (begin
+            (asserts! (var-get platform-initialized) ERR-NOT-INITIALIZED)
+            (asserts! (>= collateral-value required-collateral) ERR-INSUFFICIENT-COLLATERAL)
+            
+            (map-set loans
+                {loan-id: loan-id}
+                {
+                    borrower: tx-sender,
+                    collateral-amount: collateral,
+                    loan-amount: loan-amount,
+                    interest-rate: u5, ;; 5% interest rate
+                    start-height: block-height,
+                    last-interest-calc: block-height,
+                    status: "active"
+                }
+            )
+            
+            (match (map-get? user-loans {user: tx-sender})
+                existing-loans (map-set user-loans
+                    {user: tx-sender}
+                    {active-loans: (unwrap! (as-max-len? (append (get active-loans existing-loans) loan-id) u10) ERR-INVALID-AMOUNT)}
+                )
+                (map-set user-loans
+                    {user: tx-sender}
+                    {active-loans: (list loan-id)}
+                )
+            )
+            
+            (var-set total-loans-issued (+ (var-get total-loans-issued) u1))
+            (ok loan-id)
+        )
+    )
+)
