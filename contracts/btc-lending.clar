@@ -81,3 +81,20 @@
         )
     )
 )
+
+(define-private (liquidate-position (loan-id uint))
+    (let
+        (
+            (loan (unwrap! (map-get? loans {loan-id: loan-id}) ERR-LOAN-NOT-FOUND))
+            (borrower (get borrower loan))
+        )
+        (begin
+            (map-set loans
+                {loan-id: loan-id}
+                (merge loan {status: "liquidated"})
+            )
+            (map-delete user-loans {user: borrower})
+            (ok true)
+        )
+    )
+)
