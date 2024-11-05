@@ -45,3 +45,14 @@
     { asset: (string-ascii 10) }
     { price: uint }
 )
+
+;; Private Functions
+(define-private (calculate-collateral-ratio (collateral uint) (loan uint) (btc-price uint))
+    (let
+        (
+            (collateral-value (* collateral btc-price))
+            (ratio (* (/ collateral-value loan) u100))
+        )
+        ratio
+    )
+)
