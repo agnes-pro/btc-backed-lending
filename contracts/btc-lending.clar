@@ -239,3 +239,12 @@
 (define-read-only (get-user-loans (user principal))
     (map-get? user-loans {user: user})
 )
+
+(define-read-only (get-platform-stats)
+    {
+        total-btc-locked: (var-get total-btc-locked),
+        total-loans-issued: (var-get total-loans-issued),
+        minimum-collateral-ratio: (var-get minimum-collateral-ratio),
+        liquidation-threshold: (var-get liquidation-threshold)
+    }
+)
