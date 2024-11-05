@@ -48,7 +48,7 @@
 )
 
 (define-map collateral-prices
-    { asset: (string-ascii 10) }
+    { asset: (string-ascii 3) }
     { price: uint }
 )
 
@@ -113,7 +113,7 @@
 )
 
 ;; Helper function to validate asset string
-(define-private (is-valid-asset (asset (string-ascii 10)))
+(define-private (is-valid-asset (asset (string-ascii 3)))
     (is-some (index-of VALID-ASSETS asset))
 )
 
@@ -250,7 +250,7 @@
     )
 )
 
-(define-public (update-price-feed (asset (string-ascii 10)) (new-price uint))
+(define-public (update-price-feed (asset (string-ascii 3)) (new-price uint))
     (begin
         (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
         ;; Validate asset and price
