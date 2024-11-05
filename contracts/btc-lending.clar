@@ -98,3 +98,14 @@
         )
     )
 )
+
+
+;; Public Functions
+(define-public (initialize-platform)
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+        (asserts! (not (var-get platform-initialized)) ERR-ALREADY-INITIALIZED)
+        (var-set platform-initialized true)
+        (ok true)
+    )
+)
