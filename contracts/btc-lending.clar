@@ -13,3 +13,11 @@
 (define-constant ERR-INVALID-LIQUIDATION (err u106))
 (define-constant ERR-LOAN-NOT-FOUND (err u107))
 (define-constant ERR-LOAN-NOT-ACTIVE (err u108))
+
+;; Data Variables
+(define-data-var platform-initialized bool false)
+(define-data-var minimum-collateral-ratio uint u150) ;; 150% collateral ratio
+(define-data-var liquidation-threshold uint u120) ;; 120% triggers liquidation
+(define-data-var platform-fee-rate uint u1) ;; 1% platform fee
+(define-data-var total-btc-locked uint u0)
+(define-data-var total-loans-issued uint u0)
