@@ -66,3 +66,18 @@
         total-interest
     )
 )
+
+
+(define-private (check-liquidation (loan-id uint))
+    (let
+        (
+            (loan (unwrap! (map-get? loans {loan-id: loan-id}) ERR-LOAN-NOT-FOUND))
+            (btc-price (unwrap! (get price (map-get? collateral-prices {asset: "BTC"})) ERR-NOT-INITIALIZED))
+            (current-ratio (calculate-collateral-ratio (get collateral-amount loan) (get loan-amount loan) btc-price))
+        )
+        (if (<= current-ratio (var-get liquidation-threshold))
+            (liquidate-position loan-id)
+            (ok true)
+        )
+    )
+)
