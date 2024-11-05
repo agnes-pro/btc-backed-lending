@@ -56,3 +56,13 @@
         ratio
     )
 )
+
+(define-private (calculate-interest (principal uint) (rate uint) (blocks uint))
+    (let
+        (
+            (interest-per-block (/ (* principal rate) (* u100 u144))) ;; Daily interest divided by blocks per day
+            (total-interest (* interest-per-block blocks))
+        )
+        total-interest
+    )
+)
