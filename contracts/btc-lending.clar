@@ -67,7 +67,6 @@
     )
 )
 
-
 (define-private (check-liquidation (loan-id uint))
     (let
         (
@@ -99,7 +98,6 @@
     )
 )
 
-
 ;; Public Functions
 (define-public (initialize-platform)
     (begin
@@ -110,7 +108,6 @@
     )
 )
 
-
 (define-public (deposit-collateral (amount uint))
     (begin
         (asserts! (var-get platform-initialized) ERR-NOT-INITIALIZED)
@@ -119,7 +116,6 @@
         (ok true)
     )
 )
-
 
 (define-public (request-loan (collateral uint) (loan-amount uint))
     (let
@@ -162,7 +158,6 @@
         )
     )
 )
-
 
 (define-public (repay-loan (loan-id uint) (amount uint))
     (let
@@ -247,4 +242,9 @@
         minimum-collateral-ratio: (var-get minimum-collateral-ratio),
         liquidation-threshold: (var-get liquidation-threshold)
     }
+)
+
+;; Helper function to filter out the repaid loan
+(define-private (not-equal-loan-id (id uint))
+    (not (is-eq id id))
 )
